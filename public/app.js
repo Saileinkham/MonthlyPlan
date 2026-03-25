@@ -2,13 +2,15 @@
 'use strict';
 
 // ── FIREBASE CONFIG (FILL THIS) ───────────────────────
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDwOI4OpSpZGXkyR5Qjj_KEFCXvhkkn5X0",
+  authDomain: "monthly-plan-5b743.firebaseapp.com",
+  projectId: "monthly-plan-5b743",
+  storageBucket: "monthly-plan-5b743.firebasestorage.app",
+  messagingSenderId: "131563097396",
+  appId: "1:131563097396:web:0a0542c74ab3500dc62961",
+  measurementId: "G-9LC43MVQ36"
 };
 
 // Initialize Firebase

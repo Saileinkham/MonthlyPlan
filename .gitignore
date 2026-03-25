@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+data/notified.json
+*.log
+.env
+.firebase/
+firebase-debug.log
+firestore-debug.log
+hosting-debug.log
+ui-debug.log

@@ -1,0 +1,15 @@
+{
+  "discordWebhook": "https://discordapp.com/api/webhooks/1486320613940396032/kfMIIDnDI5hUnTN5zvn8b2j3f6nm0bn6DwJPs0vP9Ylb4WqyjsxSZ4uxuKJAnkIKrQbb",
+  "notifyBeforeMinutes": 1440,
+  "timezone": "Asia/Bangkok",
+  "githubToken": "",
+  "githubRepo": "",
+  "googleAIKey": "",
+  "theme": "dark",
+  "notifyBefore": 1,
+  "notifyUnit": "days",
+  "notifyTime": "23:46",
+  "notifyRepeat": true,
+  "repeatInterval": 5,
+  "repeatUnit": "hours"
+}

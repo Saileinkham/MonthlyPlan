@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(curl -s http://localhost:3030)",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}

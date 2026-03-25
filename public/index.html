@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monthly Plan</title>
+<link rel="stylesheet" href="style.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="auth-loading">
+
+<!-- LOGIN OVERLAY -->
+<div id="authOverlay" class="hidden">
+  <div class="auth-card">
+    <div class="auth-header">
+      <span class="auth-icon">🗓️</span>
+      <h1>Monthly Plan</h1>
+      <p>เข้าสู่ระบบเพื่อจัดการตารางงานของคุณ</p>
+    </div>
+    <div class="auth-body">
+      <div class="form-row">
+        <label>อีเมล</label>
+        <input type="email" id="loginEmail" placeholder="example@email.com">
+      </div>
+      <div class="form-row">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="btn-primary wide" id="btnLogin">เข้าสู่ระบบ</button>
+      <div class="auth-divider"><span>หรือ</span></div>
+      <button class="btn-secondary wide" id="btnGoogleLogin">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+        เข้าด้วย Google
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header id="appHeader">
+  <div class="header-brand">
+    <span class="brand-icon">🗓</span>
+    <span class="brand-name">Monthly Plan</span>
+  </div>
+  <div class="header-nav">
+    <button class="btn-icon" id="btnPrevMonth" title="เดือนก่อน">‹</button>
+    <h2 id="monthLabel">มีนาคม 2026</h2>
+    <button class="btn-icon" id="btnNextMonth" title="เดือนถัดไป">›</button>
+    <button class="btn-today" id="btnToday">วันนี้</button>
+    <button class="btn-dash" id="btnDashboard">Dashboard</button>
+  </div>
+  <div class="header-actions">
+    <button class="btn-icon" id="btnToggleCalObjectives" title="แสดง/ซ่อน Objectives ในปฏิทิน">👁️</button>
+    <button class="btn-icon" id="btnTheme" title="สลับโหมดกลางวัน/กลางคืน">☀</button>
+    <button class="btn-icon tooltip-wrap" id="btnGithub" title="GitHub">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+    </button>
+    <button class="btn-icon" id="btnSettings" title="ตั้งค่า">⚙</button>
+    <button class="btn-icon" id="btnLogout" title="ออกจากระบบ">🚪</button>
+  </div>
+</header>
+
+<!-- CALENDAR -->
+<div id="calendarWrapper">
+  <div id="dayHeaders">
+    <div>อ<span>าทิตย์</span></div><div>จ<span>ันทร์</span></div><div>อ<span>ังคาร</span></div>
+    <div>พ<span>ุธ</span></div><div>พฤ<span>หัสบดี</span></div><div>ศ<span>ุกร์</span></div><div>ส<span>าร์</span></div>
+  </div>
+  <div id="calendarGrid"></div>
+</div>
+
+<!-- LEGEND BAR -->
+<div id="legendBar">
+  <span class="legend-item"><span class="legend-dot" style="background:#7C3AED"></span>ตารางงาน</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#0EA5E9"></span>งาน (Job)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#EF4444"></span>วันหยุด</span>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardWrapper" class="hidden">
+  <!-- Stats Cards -->
+  <div id="dashStats" class="dash-stats"></div>
+  <!-- Main Content -->
+  <div class="dash-columns">
+    <!-- งาน (Jobs) -->
+    <div class="dash-col">
+      <div class="dash-col-header">
+        <h3>✅ งาน (Job)</h3>
+        <span class="dash-badge" id="dashJobCount">0</span>
+      </div>
+      <div class="dash-section">
+        <h4 class="dash-section-title">ยังไม่เสร็จ</h4>
+        <div id="dashJobsPending" class="dash-list"></div>
+      </div>
+      <div class="dash-section done-section">
+        <h4 class="dash-section-title">เสร็จแล้ว</h4>
+        <div id="dashJobsDone" class="dash-list"></div>
+      </div>
+    </div>
+    <!-- ตารางงาน (Schedules) -->
+    <div class="dash-col">
+      <div class="dash-col-header">
+        <h3 style="display:flex;align-items:center;gap:8px">
+          📋 ตารางงาน
+          <button id="btnToggleDashObjectives" class="btn-toggle-sm" title="แสดง/ซ่อน Objectives">👁️</button>
+        </h3>
+        <span class="dash-badge" id="dashScheduleCount">0</span>
+      </div>
+      <div id="dashSchedules" class="dash-list"></div>
+    </div>
+    <!-- วันหยุด -->
+    <div class="dash-col">
+      <div class="dash-col-header">
+        <h3>🎉 วันหยุด / OFF</h3>
+        <span class="dash-badge" id="dashHolidayCount">0</span>
+      </div>
+      <div id="dashHolidays" class="dash-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<div id="fabWrap">
+  <div id="fabMenu" class="fab-menu hidden">
+    <button class="fab-item" data-action="holiday"><span>🎉</span>วันหยุด</button>
+    <button class="fab-item" data-action="job"><span>✅</span>งาน (Job)</button>
+    <button class="fab-item" data-action="schedule"><span>📋</span>ตารางงาน</button>
+  </div>
+  <button id="fabMain" title="เพิ่มรายการ">+</button>
+</div>
+
+<!-- MODAL OVERLAY -->
+<div id="modalOverlay" class="hidden">
+
+  <!-- SCHEDULE MODAL -->
+  <div id="modalSchedule" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="scheduleModalTitle">📋 เพิ่มตารางงาน</h3>
+      <button class="modal-close" data-close="schedule">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="scheduleId">
+      <div class="form-row two-col">
+        <div>
+          <label>รหัสสาขา / ชื่องาน *</label>
+          <input type="text" id="scheduleTitle" placeholder="เช่น B011, ประชุมทีม">
+        </div>
+        <div>
+          <label>สาขา / หมวดหมู่</label>
+          <input type="text" id="scheduleBranch" placeholder="เช่น สาขา A, Marketing">
+        </div>
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label class="toggle-row">
+            <span>เวลาเริ่ม</span>
+            <label class="toggle"><input type="checkbox" id="scheduleHasTime" checked><span class="slider"></span></label>
+          </label>
+          <input type="time" id="scheduleTime" value="10:00">
+        </div>
+        <div id="scheduleEndTimeCol">
+          <label>เวลาสิ้นสุด</label>
+          <input type="time" id="scheduleEndTime" value="22:00">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>เลือกวันที่ (คลิกเลือกหลายวัน)</label>
+        <div id="scheduleDatePicker" class="date-picker"></div>
+        <div id="scheduleDateTags" class="date-tags"></div>
+      </div>
+      <div class="form-row">
+        <label>Objectives (เป้าหมาย) — 1 บรรทัดต่อ 1 รายการ</label>
+        <textarea id="scheduleObjectives" rows="5" placeholder="วางรายการงานที่นี่...&#10;รายการที่ 1&#10;รายการที่ 2"></textarea>
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label>สี</label>
+          <div class="color-swatches" id="scheduleColorSwatches"></div>
+        </div>
+        <div>
+          <label>แจ้งเตือน Discord</label>
+          <label class="toggle"><input type="checkbox" id="scheduleDiscordNotify"><span class="slider"></span></label>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>หมายเหตุ</label>
+        <textarea id="scheduleNote" rows="2" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger hidden" id="scheduleDeleteBtn">ลบ</button>
+      <button class="btn-secondary" data-close="schedule">ยกเลิก</button>
+      <button class="btn-primary" id="scheduleSaveBtn">บันทึก</button>
+    </div>
+  </div>
+
+  <!-- JOB MODAL -->
+  <div id="modalJob" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="jobModalTitle">✅ เพิ่มงาน (Job)</h3>
+      <button class="modal-close" data-close="job">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="jobId">
+      <div class="form-row two-col">
+        <div>
+          <label>ชื่อ Job *</label>
+          <input type="text" id="jobTitle" placeholder="ชื่องาน">
+        </div>
+        <div>
+          <label class="toggle-row">
+            <span>เวลา</span>
+            <label class="toggle"><input type="checkbox" id="jobHasTime" checked><span class="slider"></span></label>
+          </label>
+          <input type="time" id="jobTime" value="08:00">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>เลือกวันที่ (คลิกเลือกหลายวัน)</label>
+        <div id="jobDatePicker" class="date-picker"></div>
+        <div id="jobDateTags" class="date-tags"></div>
+      </div>
+      <div class="form-row">
+        <label>การทำซ้ำ (Recurring)</label>
+        <select id="jobRecurringType">
+          <option value="none">ไม่ซ้ำ</option>
+          <option value="daily">ทุกวัน</option>
+          <option value="weekly">ทุกสัปดาห์</option>
+          <option value="monthly">ทุกเดือน</option>
+          <option value="custom">กำหนดเอง</option>
+        </select>
+      </div>
+      <div id="recurringWeekly" class="form-row hidden">
+        <label>วันในสัปดาห์</label>
+        <div class="weekday-picker">
+          <label><input type="checkbox" value="0"> อา</label>
+          <label><input type="checkbox" value="1"> จ</label>
+          <label><input type="checkbox" value="2"> อ</label>
+          <label><input type="checkbox" value="3"> พ</label>
+          <label><input type="checkbox" value="4"> พฤ</label>
+          <label><input type="checkbox" value="5"> ศ</label>
+          <label><input type="checkbox" value="6"> ส</label>
+        </div>
+      </div>
+      <div id="recurringCustom" class="form-row hidden">
+        <label>ทุก</label>
+        <div class="custom-interval">
+          <input type="number" id="customInterval" value="1" min="1" style="width:70px">
+          <select id="customUnit">
+            <option value="days">วัน</option>
+            <option value="weeks">สัปดาห์</option>
+            <option value="months">เดือน</option>
+          </select>
+        </div>
+      </div>
+      <div id="recurringDates" class="form-row two-col hidden">
+        <div>
+          <label>วันเริ่มต้น</label>
+          <input type="date" id="jobStartDate">
+        </div>
+        <div>
+          <label>วันสิ้นสุด (ไม่บังคับ)</label>
+          <input type="date" id="jobEndDate">
+        </div>
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label>สี</label>
+          <div class="color-swatches" id="jobColorSwatches"></div>
+        </div>
+        <div>
+          <label>แจ้งเตือน Discord</label>
+          <label class="toggle"><input type="checkbox" id="jobDiscordNotify"><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger hidden" id="jobDeleteBtn">ลบ</button>
+      <button class="btn-secondary" data-close="job">ยกเลิก</button>
+      <button class="btn-primary" id="jobSaveBtn">บันทึก</button>
+    </div>
+  </div>
+
+  <!-- HOLIDAY / OFF MODAL -->
+  <div id="modalHoliday" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="holidayModalTitle">🎉 เพิ่มวันหยุด / OFF</h3>
+      <button class="modal-close" data-close="holiday">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="holidayId">
+      <div class="form-row">
+        <label>ประเภท *</label>
+        <select id="holidayType">
+          <option value="นักขัตฤกษ์">วันหยุดนักขัตฤกษ์</option>
+          <option value="OFF">OFF</option>
+          <option value="ลาป่วย">ลาป่วย</option>
+          <option value="ลาพักร้อน">ลาพักร้อน</option>
+          <option value="ลากิจ">ลากิจ</option>
+          <option value="อื่นๆ">อื่นๆ</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>หมายเหตุ (ไม่บังคับ)</label>
+        <input type="text" id="holidayName" placeholder="เช่น ไม่สบาย, วันสงกรานต์">
+      </div>
+      <div class="form-row">
+        <label>เลือกวันที่ (คลิกเลือกหลายวัน)</label>
+        <div id="holidayDatePicker" class="date-picker"></div>
+        <div id="holidayDateTags" class="date-tags"></div>
+      </div>
+      <div class="form-row">
+        <label>สีช่อง</label>
+        <div class="color-swatches" id="holidayColorSwatches"></div>
+        <input type="color" id="holidayCustomColor" value="#EF4444" style="margin-top:8px">
+      </div>
+      <div class="form-row">
+        <label class="toggle-row">
+          <span>บล็อกงานในวันหยุด</span>
+          <label class="toggle"><input type="checkbox" id="holidayBlockTasks" checked><span class="slider"></span></label>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger hidden" id="holidayDeleteBtn">ลบ</button>
+      <button class="btn-secondary" data-close="holiday">ยกเลิก</button>
+      <button class="btn-primary" id="holidaySaveBtn">บันทึก</button>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL (view day items) -->
+  <div id="modalDetail" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="detailDate">รายละเอียดวันที่</h3>
+      <button class="modal-close" data-close="detail">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="modalSettings" class="modal wide hidden">
+    <div class="modal-header">
+      <h3>⚙ ตั้งค่า</h3>
+      <button class="modal-close" data-close="settings">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-section">
+        <h4>🔔 Discord Webhook</h4>
+        <div class="form-row">
+          <label>Webhook URL</label>
+          <input type="url" id="settingDiscordWebhook" placeholder="https://discord.com/api/webhooks/...">
+        </div>
+        <div class="form-row">
+          <label>แจ้งเตือนล่วงหน้า</label>
+          <div class="custom-interval">
+            <input type="number" id="settingNotifyBefore" value="1" min="1" style="width:70px">
+            <select id="settingNotifyUnit">
+              <option value="minutes">นาที</option>
+              <option value="hours">ชั่วโมง</option>
+              <option value="days">วัน</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>เวลาที่แจ้งเตือน (ใช้เมื่อเลือก "วัน")</label>
+          <input type="time" id="settingNotifyTime" value="08:00">
+        </div>
+        <div class="form-row">
+          <label class="toggle-row">
+            <span>เตือนซ้ำ</span>
+            <label class="toggle"><input type="checkbox" id="settingNotifyRepeat"><span class="slider"></span></label>
+          </label>
+        </div>
+        <div id="repeatOptions" class="form-row hidden">
+          <label>เตือนซ้ำทุก</label>
+          <div class="custom-interval">
+            <input type="number" id="settingRepeatInterval" value="30" min="1" style="width:70px">
+            <select id="settingRepeatUnit">
+              <option value="minutes">นาที</option>
+              <option value="hours">ชั่วโมง</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-secondary" id="btnTestDiscord">ทดสอบ Discord</button>
+        <span id="discordTestResult" style="margin-left:10px;font-size:13px"></span>
+      </div>
+      <div class="settings-section">
+        <h4>🐙 GitHub</h4>
+        <div class="form-row">
+          <label>Repository (owner/repo)</label>
+          <input type="text" id="settingGithubRepo" placeholder="username/repo-name">
+        </div>
+        <div class="form-row">
+          <label>Personal Access Token (ไม่บังคับ)</label>
+          <input type="password" id="settingGithubToken" placeholder="ghp_...">
+        </div>
+      </div>
+      <div class="settings-section">
+        <h4>🤖 Google AI Studio</h4>
+        <div class="form-row">
+          <label>API Key</label>
+          <input type="password" id="settingGoogleAIKey" placeholder="AIza...">
+        </div>
+        <p class="hint">ใช้สำหรับแนะนำงานด้วย AI ในอนาคต</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="settings">ยกเลิก</button>
+      <button class="btn-primary" id="settingsSaveBtn">บันทึกการตั้งค่า</button>
+    </div>
+  </div>
+
+  <!-- GITHUB PANEL -->
+  <div id="modalGithub" class="modal hidden">
+    <div class="modal-header">
+      <h3>🐙 GitHub Commits</h3>
+      <button class="modal-close" data-close="github">✕</button>
+    </div>
+    <div class="modal-body" id="githubBody">
+      <p class="hint">กำลังโหลด...</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div id="toastContainer"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

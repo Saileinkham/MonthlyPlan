@@ -1,0 +1,43 @@
+[
+  {
+    "id": "2caba4c5-9fe3-4aae-80f1-e8b97a3217df",
+    "createdAt": "2026-03-25T15:10:49.115Z",
+    "title": "B011",
+    "branch": "Central Ladprao",
+    "time": "10:00",
+    "endTime": "22:00",
+    "dates": [
+      "2026-03-27",
+      "2026-03-26"
+    ],
+    "objectives": {
+      "2026-03-27": [
+        "Training Management",
+        "ตรวจสอบ KDS",
+        "QSC",
+        "Follow up ยอด",
+        "ตรวจ SOS"
+      ],
+      "2026-03-26": [
+        "Training Management",
+        "ตรวจสอบ KDS",
+        "QSC",
+        "Follow up ยอด",
+        "ตรวจ SOS"
+      ]
+    },
+    "completedObjectives": {
+      "2026-03-27": [
+        0,
+        2
+      ],
+      "2026-03-26": [
+        2,
+        1
+      ]
+    },
+    "color": "#7C3AED",
+    "discordNotify": true,
+    "note": ""
+  }
+]
